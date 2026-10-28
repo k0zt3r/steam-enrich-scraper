@@ -16,25 +16,25 @@ from config import BrowserConfig
 from models.game import GamePayload
 
 
-FALLBACK_NOTES = "1. Download\n2. Extract\n3. Run"
+FALLBACK_NOTES = "1. Скачать\n2. Распаковать\n3. Запустить"
 DEFAULT_VERSION = "v1.0.0"
 
 
 class BrowserPublisher:
     """
-    Fills a destination web form with Selenium, for targets that have no
-    API. Uses a persistent Chrome profile so an existing logged-in session
-    is reused, fills fields found by `data-field="..."` attributes, uploads
-    screenshots, and — deliberately — never submits: a human reviews the
-    filled form and presses submit. That human-in-the-loop step is the
-    point, not a limitation.
+    Заполняет веб-форму через Selenium — для площадок без API. Использует
+    постоянный профиль Chrome, чтобы переиспользовать уже залогиненную сессию,
+    заполняет поля по атрибутам `data-field="..."`, загружает скриншоты и —
+    намеренно — никогда не отправляет форму: карточку проверяет человек и
+    жмёт «отправить» сам. Этот шаг «человек в контуре» — так задумано, а не
+    ограничение.
     """
 
     def __init__(self):
         self.driver = None
 
     # ------------------------------------------------------------------
-    # Browser lifecycle
+    # Жизненный цикл браузера
     # ------------------------------------------------------------------
 
     def _profile_dir(self) -> str:
@@ -77,18 +77,18 @@ class BrowserPublisher:
         if found:
             return found
 
-        print("  ! chrome.exe not found, letting Selenium Manager locate it")
+        print("  ! chrome.exe не найден, пусть Selenium Manager ищет сам")
         return None
 
     def setup_profile(self):
-        """One-off: open the login page so you can sign in by hand once; the
-        session is then saved in the profile for later runs."""
+        """Разовая настройка: открыть страницу входа, чтобы залогиниться руками
+        один раз; дальше сессия берётся из профиля."""
         self.start()
-        print("[Browser] Opening the site. Log in by hand, then close Chrome.")
+        print("[Browser] Открываю сайт. Залогинься руками и закрой Chrome.")
         origin = re.match(r"https?://[^/]+", BrowserConfig.FORM_URL)
         self.driver.get(origin.group(0) if origin else BrowserConfig.FORM_URL)
         try:
-            input("Press Enter here after you have logged in...")
+            input("Нажми Enter здесь после того, как залогинишься...")
         except (EOFError, KeyboardInterrupt):
             pass
         self.close()
@@ -97,7 +97,7 @@ class BrowserPublisher:
         if self.driver is None:
             self.start()
 
-        print("[Browser] Opening form...")
+        print("[Browser] Открываю форму...")
         self.driver.get(BrowserConfig.FORM_URL)
 
         try:
@@ -107,18 +107,18 @@ class BrowserPublisher:
                 )
             )
         except Exception:
-            print("[Browser] FORM NOT FOUND at", self.driver.current_url)
+            print("[Browser] ФОРМА НЕ НАЙДЕНА на", self.driver.current_url)
             raise
 
-        print("[Browser] Form loaded")
+        print("[Browser] Форма загружена")
 
     # ------------------------------------------------------------------
-    # Fields
+    # Поля
     # ------------------------------------------------------------------
 
-    # ChromeDriver's send_keys() cannot type characters outside the Basic
-    # Multilingual Plane (emoji etc.) and throws; strip them so one bad
-    # character does not lose the whole field.
+    # ChromeDriver не умеет send_keys() символы вне Basic Multilingual Plane
+    # (эмодзи и т.п.) и падает; вырезаем их, чтобы из-за одного символа не
+    # потерять всё поле.
     _NON_BMP = re.compile("[\U00010000-\U0010FFFF]", flags=re.UNICODE)
 
     @classmethod
@@ -133,8 +133,8 @@ class BrowserPublisher:
         )
 
     def fill_field(self, name: str, value: str) -> bool:
-        # A failure in one field must not abort the rest - the human checks
-        # the card before submitting anyway.
+        # Сбой в одном поле не должен обрывать остальные — человек всё равно
+        # проверяет карточку перед отправкой.
         try:
             field = self.get_field(name)
             self.driver.execute_script(
@@ -157,7 +157,7 @@ class BrowserPublisher:
             )
             return True
         except Exception as e:
-            print(f"  ! failed to fill '{name}': {e!r}")
+            print(f"  ! не удалось заполнить '{name}': {e!r}")
             return False
 
     def fill_category(self, category_id: int):
@@ -178,16 +178,16 @@ class BrowserPublisher:
 
     def fill_download_links(self, links) -> bool:
         if not links:
-            print("  ! no download links")
+            print("  ! нет ссылок на скачивание")
             return False
         value = "\n".join(l.strip() for l in links if l and l.strip())
         ok = self.fill_field("downloads", value)
-        print("  ✓ download links" if ok else "  ! download-links field not found")
+        print("  ✓ ссылки на скачивание" if ok else "  ! поле ссылок не найдено")
         return ok
 
     # ------------------------------------------------------------------
-    # Screenshots: download each URL to a temp file and attach it to the
-    # matching <input type=file data-screenshot="i">.
+    # Скриншоты: каждый URL скачиваем во временный файл и прикрепляем к
+    # соответствующему <input type=file data-screenshot="i">.
     # ------------------------------------------------------------------
 
     def get_shot_input(self, index: int, timeout: int = 15):
@@ -213,7 +213,7 @@ class BrowserPublisher:
     def fill_screenshots(self, urls):
         urls = [u for u in (urls or []) if u][:6]
         if not urls:
-            print("  ! no screenshots to upload")
+            print("  ! скриншотов для загрузки нет")
             return
 
         tmp_dir = tempfile.mkdtemp(prefix="shots_")
@@ -221,13 +221,13 @@ class BrowserPublisher:
             try:
                 path = self.download_screenshot(url, tmp_dir, i)
             except Exception as e:
-                print(f"  ! screenshot {i} download failed:", repr(e))
+                print(f"  ! скриншот {i} не скачался:", repr(e))
                 continue
             try:
                 self.get_shot_input(i).send_keys(path)
-                print(f"  ✓ screenshot {i} uploaded")
+                print(f"  ✓ скриншот {i} загружен")
             except Exception as e:
-                print(f"  ! screenshot {i} upload failed:", repr(e))
+                print(f"  ! скриншот {i} не загрузился:", repr(e))
 
     # ------------------------------------------------------------------
 
@@ -241,7 +241,7 @@ class BrowserPublisher:
         return text[:1500].rsplit(" ", 1)[0] + "…"
 
     def fill(self, game: GamePayload, category_id: int | None = None):
-        print("\n[Browser] Filling form...")
+        print("\n[Browser] Заполняю форму...")
 
         self.fill_field("title", game.title)
         self.fill_field("steam_url", game.steam_url)
@@ -249,7 +249,7 @@ class BrowserPublisher:
         if category_id is not None:
             self.fill_category(category_id)
         else:
-            print("  i category left for manual selection")
+            print("  i категорию оставляю на ручной выбор")
 
         self.fill_field("version", getattr(game, "version", "") or DEFAULT_VERSION)
         self.fill_field("source_url", game.source_url)
@@ -261,7 +261,7 @@ class BrowserPublisher:
 
         self.driver.execute_script("window.scrollTo({top: 0});")
         print("\n" + "=" * 60)
-        print("FORM READY (filled, NOT submitted - review and submit by hand)")
+        print("ФОРМА ГОТОВА (заполнена, НЕ отправлена — проверь и отправь руками)")
         print("=" * 60 + "\n")
 
     # ------------------------------------------------------------------
@@ -289,5 +289,5 @@ class BrowserPublisher:
         try:
             self.driver.quit()
         except (Exception, KeyboardInterrupt) as e:
-            print("[Browser] error while closing (ignored):", repr(e))
+            print("[Browser] ошибка при закрытии (игнорирую):", repr(e))
         self.driver = None

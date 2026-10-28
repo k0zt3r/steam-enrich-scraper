@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 class CatalogParser:
-    """Parse a catalog listing page into (title, game_page_url) pairs."""
+    """Парсит страницу-список каталога в пары (название, ссылка на страницу игры)."""
 
     def parse(self, html: str, base_url: str) -> list[tuple[str, str]]:
         soup = BeautifulSoup(html, "lxml")

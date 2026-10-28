@@ -3,8 +3,8 @@ import sqlite3
 from config import Config
 
 
-# Statuses that mean the game was already published; it only needs sending
-# again if something changed at the source (new version / different links).
+# Статусы, означающие, что игра уже опубликована; повторно слать нужно
+# только если у источника что-то изменилось (новая версия / другие ссылки).
 DONE_STATUSES = (
     "added",
     "updated",
@@ -15,7 +15,8 @@ DONE_STATUSES = (
 
 
 class Database:
-    """Tiny sqlite dedup store so a re-run skips unchanged games."""
+    """Маленькое sqlite-хранилище для дедупликации: повтор пропускает
+    игры, у которых ничего не изменилось."""
 
     def __init__(self):
         self.conn = sqlite3.connect(Config.DATABASE)
@@ -37,9 +38,8 @@ class Database:
             """
         )
 
-        # Lightweight migration for older DB files: the version + a
-        # "fingerprint" (version + download links) tell us whether anything
-        # changed at the source since the last run.
+        # Лёгкая миграция старых БД: версия + «отпечаток» (версия + ссылки на
+        # скачивание) говорят, изменилось ли что-то у источника с прошлого раза.
         existing = {
             row[1]
             for row in cursor.execute("PRAGMA table_info(games)")
@@ -76,7 +76,7 @@ class Database:
         }
 
     def is_up_to_date(self, url, fingerprint):
-        """True if the game was handled and nothing changed at the source."""
+        """True, если игра обработана и у источника с тех пор ничего не изменилось."""
 
         record = self.get(url)
 

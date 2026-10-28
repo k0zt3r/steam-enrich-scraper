@@ -12,7 +12,7 @@ STEAM_SEARCH = "https://store.steampowered.com/search/"
 
 
 class SteamClient:
-    """Thin client over the public Steam store endpoints."""
+    """Тонкий клиент к публичным эндпоинтам магазина Steam."""
 
     def __init__(self):
         self.session = requests.Session()
@@ -30,7 +30,7 @@ class SteamClient:
         try:
             response = self.session.get(
                 STEAM_API,
-                params={"appids": appid, "l": "english", "cc": "us"},
+                params={"appids": appid, "l": "russian", "cc": "ru"},
                 timeout=20,
             )
             data = response.json()
@@ -64,20 +64,22 @@ class SteamClient:
         ).get_text("\n")
 
         req = Requirements()
+        # Ключевые слова и на русском, и на английском — Steam отдаёт метки
+        # в зависимости от локали.
         for raw in minimum.split("\n"):
             line = raw.strip()
             if not line:
                 continue
-            lower = line.lower()
-            if "os" in lower or "windows" in lower:
+            low = line.lower()
+            if "ос" in low or "os" in low or "операцион" in low or "windows" in low:
                 req.os += line + "\n"
-            elif "processor" in lower or "cpu" in lower:
+            elif "процессор" in low or "processor" in low or "cpu" in low:
                 req.cpu += line + "\n"
-            elif "memory" in lower or "ram" in lower:
+            elif "память" in low or "озу" in low or "memory" in low or "ram" in low:
                 req.ram += line + "\n"
-            elif "graphics" in lower or "video" in lower:
+            elif "видео" in low or "graphics" in low:
                 req.gpu += line + "\n"
-            elif "storage" in lower or "disk" in lower:
+            elif "накопит" in low or "место" in low or "диск" in low or "storage" in low or "disk" in low:
                 req.storage += line + "\n"
 
         return req
@@ -99,9 +101,9 @@ class SteamClient:
         return movies[0].get("mp4", {}).get("max", "")
 
     # ------------------------------------------------------------------
-    # Fuzzy title matching: Steam search returns a mix of relevance,
-    # popularity and price, so the top row is not always the right game.
-    # We re-rank candidates by similarity to the title we searched for.
+    # Нечёткое сопоставление названий: поиск Steam возвращает смесь
+    # релевантности, популярности и цены, так что верхняя строка не всегда
+    # нужная игра. Переупорядочиваем кандидатов по похожести на искомое.
     # ------------------------------------------------------------------
 
     _STOPWORDS = {
@@ -131,7 +133,7 @@ class SteamClient:
 
     @classmethod
     def _required_threshold(cls, source_title: str) -> float:
-        """Shorter / more generic titles need a higher bar to avoid false hits."""
+        """Чем короче/типовее название, тем выше планка — иначе ложные совпадения."""
         n = len(cls._significant_words(source_title))
         if n <= 2:
             return 90
@@ -165,9 +167,9 @@ class SteamClient:
 
         if not matched and results:
             print(
-                f"  [Steam search] best candidate {results[0]['title']!r} "
-                f"({results[0]['score']:.1f}%) is below the required "
-                f"threshold ({threshold}%), treating as not found"
+                f"  [Steam search] лучший кандидат {results[0]['title']!r} "
+                f"({results[0]['score']:.1f}%) ниже порога ({threshold}%), "
+                f"считаю, что не найдено"
             )
 
         return matched

@@ -1,10 +1,11 @@
 from urllib.parse import urlparse
 
 
-# The single place where allowed download hosts are listed. Any parser or
-# scraper may return arbitrary links; GameBuilder.build() runs them through
-# filter_archive_links() once, so there is no need to duplicate this check
-# in every source. Replace these with the hosts your own pipeline trusts.
+# Единственное место, где перечислены разрешённые хосты для скачивания.
+# Любой парсер или скрапер может вернуть что угодно; GameBuilder.build()
+# один раз прогоняет ссылки через filter_archive_links(), поэтому дублировать
+# проверку в каждом источнике не нужно. Замени на хосты, которым доверяет
+# твой собственный пайплайн.
 ALLOWED_ARCHIVE_HOSTS = (
     "files.example.com",
     "cdn.example.com",
@@ -30,12 +31,12 @@ def is_allowed_archive_host(link_url: str) -> bool:
 
 def filter_archive_links(links, source_domain: str = "") -> list:
     """
-    Keep only links we are willing to publish: magnet / direct .torrent,
-    links on an allowed host, or links on the source site itself.
+    Оставляем только те ссылки, которые готовы опубликовать: magnet / прямой
+    .torrent, ссылки на разрешённом хосте или ссылки на самом сайте-источнике.
 
-    source_domain is the domain of the game page. A link on that same
-    domain is trusted on its own, which matters for sources that host the
-    download directly instead of via a third-party file host.
+    source_domain — домен страницы игры. Ссылка на том же домене считается
+    доверенной сама по себе; это важно для источников, которые отдают файл
+    напрямую, а не через сторонний файлообменник.
     """
 
     source_domain = _normalize_host(source_domain) if source_domain else ""
@@ -61,6 +62,6 @@ def filter_archive_links(links, source_domain: str = "") -> list:
                 filtered.append(link)
 
     if not filtered:
-        print("no acceptable download link found - pick one manually")
+        print("подходящих ссылок на скачивание нет — выбери вручную")
 
     return filtered

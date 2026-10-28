@@ -5,21 +5,21 @@ from services.links import filter_archive_links
 
 
 class GameBuilder:
-    """Merge a scraped SourceGame with Steam metadata into a GamePayload."""
+    """Объединяет распарсенный SourceGame с данными Steam в GamePayload."""
 
     def build(self, source: SourceGame, steam: SteamData) -> GamePayload:
 
-        # Prefer the canonical Steam title; the caller guarantees Steam data
-        # is present (otherwise validate() rejects the empty title).
+        # Каноническое название берём из Steam; вызывающий код гарантирует,
+        # что данные Steam есть (иначе validate() отсечёт пустое название).
         title = steam.name
 
         description = steam.description or source.description
 
-        # Release notes (edition/install steps) only exist at the source;
-        # Steam has no such notion.
+        # Примечания к релизу (издание/шаги установки) есть только у источника,
+        # у Steam такого понятия нет.
         release_notes = source.release_notes
 
-        # Build version is a source-only field as well.
+        # Версия сборки — тоже поле только источника.
         version = source.version
 
         developer = steam.developer or ""
@@ -28,10 +28,10 @@ class GameBuilder:
         trailer = steam.trailer
         screenshots = steam.screenshots
 
-        # Single point of link filtering, regardless of where the links came
-        # from (static HTML, headless browser, a future source...). The source
-        # domain is passed so a link hosted on the source site itself is not
-        # dropped as an unknown host.
+        # Единая точка фильтрации ссылок — неважно, откуда они пришли
+        # (статичный HTML, headless-браузер, будущий источник...). Домен
+        # источника передаём, чтобы не отсечь ссылку, которую хостит сам
+        # сайт-источник, как «неизвестный хост».
         download_links = filter_archive_links(
             source.download_links,
             source_domain=urlparse(source.url).netloc,

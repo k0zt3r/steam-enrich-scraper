@@ -1,6 +1,6 @@
 """
-Offline test for GamePageParser against saved example-store fixtures.
-No network: requests.post is monkeypatched to serve the AJAX fixture.
+Офлайн-тест GamePageParser на сохранённых фикстурах примера-магазина.
+Без сети: requests.post подменяется и отдаёт AJAX-фикстуру.
 """
 
 from pathlib import Path
@@ -37,20 +37,20 @@ def test_game_page_parses_offline(monkeypatch):
     assert game.title == "Nebula Drift"
     assert "app/440" in game.steam_url
     assert game.version == "v1.4.2"
-    assert game.size == "8.3 GB"
+    assert game.size == "8.3 ГБ"
 
-    # <br>-separated block became clean multi-line text
-    assert "Run Game.exe" in game.release_notes
-    assert game.release_notes.splitlines()[0] == "Edition: Portable"
+    # блок с <br> превратился в чистый многострочный текст
+    assert "Запустите Game.exe" in game.release_notes
+    assert game.release_notes.splitlines()[0] == "Издание: Portable"
 
-    # static link from the page + two more pulled via the AJAX call
+    # статичная ссылка со страницы + две, добранные через AJAX
     assert "https://files.example.com/d/abc123" in game.download_links
     assert "https://cdn.example.com/f/xyz789" in game.download_links
     assert "https://files.example.com/d/def456" in game.download_links
 
-    # the ajax-trigger anchor itself must not leak in as a link
+    # сам якорь ajax-trigger не должен просочиться как ссылка
     assert all("#" not in l for l in game.download_links)
 
-    # free-text requirements block split into fields
-    assert game.requirements.gpu.startswith("Graphics")
-    assert "8 GB RAM" in game.requirements.ram
+    # свободный текст требований разобран на поля
+    assert game.requirements.gpu.startswith("Видеокарта")
+    assert "8 ГБ" in game.requirements.ram

@@ -10,32 +10,32 @@ class Config:
 
 
 class ApiConfig:
-    """Settings for the REST publisher (publishers/api_publisher.py)."""
+    """Настройки REST-паблишера (publishers/api_publisher.py)."""
 
-    # Base URL of the destination REST API. Point this at your own
-    # service; the default is a placeholder that does not exist.
+    # Базовый URL целевого REST API. Укажи свой; по умолчанию стоит
+    # заглушка, которой не существует.
     API_URL = os.getenv("PUBLISH_API_URL", "https://api.example.com/v1")
 
-    # API key is read from the environment only — never hard-code it.
+    # Ключ читается только из окружения — никогда не хардкодим его.
     API_KEY = os.getenv("PUBLISH_API_KEY", "")
 
-    # Largest .torrent we will download and base64-encode before sending.
+    # Максимальный размер .torrent, который качаем и кодируем в base64.
     MAX_TORRENT_BYTES = int(os.getenv("MAX_TORRENT_BYTES", str(2 * 1024 * 1024)))
 
-    # "url"    - send the .torrent URL, let the server fetch it
-    # "base64" - download the .torrent ourselves and send it inline
+    # "url"    - отдаём серверу ссылку на .torrent, он качает сам
+    # "base64" - качаем .torrent сами и отправляем инлайн
     TORRENT_MODE = os.getenv("TORRENT_MODE", "url").lower()
 
     DEFAULT_VERSION = "v1.0.0"
-    FALLBACK_INSTRUCTIONS = "1. Download\n2. Extract\n3. Run"
+    FALLBACK_INSTRUCTIONS = "1. Скачать\n2. Распаковать\n3. Запустить"
 
 
 class BrowserConfig:
-    """Settings for the Selenium form publisher (publishers/browser_publisher.py)."""
+    """Настройки Selenium-паблишера (publishers/browser_publisher.py)."""
 
-    # URL of the web form the browser publisher fills in.
+    # URL веб-формы, которую заполняет браузерный паблишер.
     FORM_URL = os.getenv("FORM_URL", "https://demo.example.com/submit")
 
-    # Optional path to a Chrome user-data dir with an existing logged-in
-    # session, so the publisher does not have to log in every run.
+    # Необязательный путь к профилю Chrome с уже залогиненной сессией,
+    # чтобы не входить на сайт при каждом запуске.
     PROFILE_DIR = os.getenv("BROWSER_PROFILE", "")

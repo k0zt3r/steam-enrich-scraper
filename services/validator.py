@@ -2,17 +2,17 @@ from models.game import GamePayload
 
 
 def validate(payload: GamePayload) -> list[str]:
-    """Return a list of human-readable problems; empty means the record is OK."""
+    """Вернуть список проблем в читаемом виде; пустой список — запись в порядке."""
 
     errors = []
 
     if not payload.title:
-        errors.append("missing title")
+        errors.append("нет названия")
 
     if not payload.steam_appid:
-        errors.append("missing Steam appid")
+        errors.append("нет Steam appid")
 
     if not payload.download_links:
-        errors.append("no download links")
+        errors.append("нет ссылок на скачивание")
 
     return errors

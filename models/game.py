@@ -13,7 +13,7 @@ class Requirements:
 
 @dataclass
 class SteamData:
-    """Metadata pulled from the public Steam store API."""
+    """Метаданные, полученные из публичного API магазина Steam."""
 
     appid: int = 0
     name: str = ""
@@ -30,7 +30,7 @@ class SteamData:
 
 @dataclass
 class SourceGame:
-    """What a catalog page parser extracts from a single game page."""
+    """То, что парсер извлекает со страницы одной игры в каталоге."""
 
     title: str
     url: str
@@ -47,7 +47,7 @@ class SourceGame:
 
 @dataclass
 class GamePayload:
-    """Normalized record ready to be published (API or web form)."""
+    """Нормализованная запись, готовая к публикации (через API или веб-форму)."""
 
     title: str
     steam_url: str

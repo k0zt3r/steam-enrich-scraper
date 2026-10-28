@@ -6,22 +6,22 @@ from bs4 import BeautifulSoup
 from models.game import SourceGame, Requirements
 
 
-# Endpoint (relative to the site root) that serves the extra download
-# mirrors which the page loads lazily via AJAX.
+# Эндпоинт (относительно корня сайта), который отдаёт дополнительные
+# зеркала — их страница подгружает лениво через AJAX.
 AJAX_ENDPOINT = "/ajax/downloads"
 
 
 class GamePageParser:
     """
-    Parse an example-store game detail page into a SourceGame.
+    Парсит страницу игры из примера-каталога в SourceGame.
 
-    Shows a few common scraping techniques on one page:
-      * pulling fields out with CSS selectors,
-      * reading a value from an attribute (the Steam link),
-      * turning a <br>-separated block into clean multi-line text,
-      * fetching an extra block that is NOT in the static HTML but is
-        loaded on demand through an AJAX call,
-      * parsing a free-text system-requirements block into fields.
+    Показывает несколько типичных техник скрапинга на одной странице:
+      * вытаскивание полей CSS-селекторами,
+      * чтение значения из атрибута (ссылка на Steam),
+      * превращение блока с <br> в чистый многострочный текст,
+      * добор блока, которого НЕТ в статичном HTML, а он подгружается
+        по запросу через AJAX,
+      * разбор свободного текста системных требований на поля.
     """
 
     def parse(self, html: str, url: str) -> SourceGame:
@@ -93,7 +93,7 @@ class GamePageParser:
             response.raise_for_status()
             text = response.text
         except Exception as e:
-            print("  [ajax] fetch failed:", repr(e))
+            print("  [ajax] запрос не удался:", repr(e))
             return []
 
         fragment = BeautifulSoup(text, "lxml")
@@ -111,20 +111,22 @@ class GamePageParser:
         for br in node.find_all("br"):
             br.replace_with("\n")
 
+        # Ключевые слова и по-русски, и по-английски — чтобы разобрать как
+        # фикстуру на русском, так и ответ Steam.
         for raw in node.get_text().split("\n"):
             line = raw.strip()
             low = line.lower()
             if not line:
                 continue
-            if low.startswith("os"):
+            if low.startswith("ос") or low.startswith("os") or "операцион" in low or "windows" in low:
                 req.os = line
-            elif "processor" in low or low.startswith("cpu"):
+            elif "процессор" in low or "processor" in low or low.startswith("cpu"):
                 req.cpu = line
-            elif "memory" in low or "ram" in low:
+            elif "память" in low or "озу" in low or "memory" in low or "ram" in low:
                 req.ram = line
-            elif "graphics" in low or "video" in low:
+            elif "видео" in low or "graphics" in low:
                 req.gpu = line
-            elif "storage" in low or "disk" in low:
+            elif "накопит" in low or "место" in low or "диск" in low or "storage" in low or "disk" in low:
                 req.storage = line
 
         return req

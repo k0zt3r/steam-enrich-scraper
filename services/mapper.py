@@ -20,7 +20,7 @@ def _same_host(link: str, source_url: str) -> bool:
 
 
 def fetch_torrent_b64(url: str, referer: str = "") -> str:
-    """Download a .torrent and return base64, or '' on failure."""
+    """Скачивает .torrent и возвращает base64 или '' при неудаче."""
 
     try:
         r = requests.get(
@@ -30,25 +30,25 @@ def fetch_torrent_b64(url: str, referer: str = "") -> str:
         )
         r.raise_for_status()
     except Exception as e:
-        print("  [torrent] download failed:", repr(e))
+        print("  [torrent] не удалось скачать:", repr(e))
         return ""
 
     data = r.content
 
-    # bencode dict: starts with 'd' and contains an info section
+    # bencode-словарь: начинается с 'd' и содержит секцию info
     if not data.startswith(b"d") or b"4:info" not in data:
-        print("  [torrent] response is not a .torrent, skipping")
+        print("  [torrent] ответ не похож на .torrent, пропускаю")
         return ""
 
     if len(data) > ApiConfig.MAX_TORRENT_BYTES:
-        print("  [torrent] file too large, skipping")
+        print("  [torrent] файл слишком большой, пропускаю")
         return ""
 
     return base64.b64encode(data).decode("ascii")
 
 
 def has_source(body: dict) -> bool:
-    """True if the body carries at least one way to obtain the download."""
+    """True, если в теле есть хотя бы один способ получить раздачу."""
 
     return bool(
         body.get("magnetUri")
@@ -59,13 +59,13 @@ def has_source(body: dict) -> bool:
 
 
 def make_fingerprint(version: str, links) -> str:
-    """Fingerprint of a release: version + its download links, sorted."""
+    """Отпечаток релиза: версия + его ссылки на скачивание, отсортированные."""
 
     return "|".join([version or ""] + sorted(set(links or [])))
 
 
 def pick_torrent_links(links, source_url: str) -> list:
-    """magnet / .torrent / links hosted on the source site itself."""
+    """magnet / .torrent / ссылки с самого сайта-источника."""
 
     return [
         l
@@ -78,10 +78,10 @@ def pick_torrent_links(links, source_url: str) -> list:
 
 def build_game_body(payload: GamePayload, force_version: bool = False) -> dict:
     """
-    GamePayload -> JSON body for POST /games.
+    GamePayload -> JSON-тело для POST /games.
 
-    force_version=True adds "force": true so the server applies the update
-    without comparing versions (an intentional rollback).
+    force_version=True добавляет "force": true, и сервер применяет обновление
+    без сравнения версий (осознанный откат).
     """
 
     magnets = [l for l in payload.download_links if l.startswith("magnet:")]
@@ -95,10 +95,10 @@ def build_game_body(payload: GamePayload, force_version: bool = False) -> dict:
     ]
     host_links = [l for l in rest if l not in torrent_links]
 
-    # By default we send the server the .torrent URL (torrentUrl) and let it
-    # fetch, validate and store the file. TORRENT_MODE=base64 is the older
-    # behaviour (download the .torrent ourselves and send it inline), needed
-    # only when the server cannot fetch the link itself.
+    # По умолчанию отдаём серверу ССЫЛКУ на .torrent (torrentUrl): он сам
+    # скачает, проверит и сохранит файл. TORRENT_MODE=base64 — старое
+    # поведение (качаем .torrent сами и шлём инлайн), нужно только если
+    # сервер не может скачать ссылку самостоятельно.
     torrent_url = ""
     torrent_b64 = ""
 
@@ -111,9 +111,9 @@ def build_game_body(payload: GamePayload, force_version: bool = False) -> dict:
         else:
             torrent_url = torrent_links[0]
 
-    # Could not hand over a .torrent (base64 mode: too large or failed to
-    # download) - fall back to passing the direct .torrent link as a plain
-    # download link instead of losing the release.
+    # Не удалось отдать .torrent (base64-режим: слишком большой или не
+    # скачался) — отдаём прямую ссылку на .torrent как обычную ссылку на
+    # скачивание, а не теряем раздачу.
     if not magnets and not torrent_b64 and not torrent_url:
         host_links = host_links + [
             l

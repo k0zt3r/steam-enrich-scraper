@@ -1,6 +1,7 @@
 import os
 import sys
 
-# Put the repository root on sys.path so tests can import the top-level
-# packages (parsers, services, models, ...) when pytest is run from anywhere.
+# Кладём корень репозитория в sys.path, чтобы тесты могли импортировать
+# пакеты верхнего уровня (parsers, services, models, ...) при запуске
+# pytest из любого места.
 sys.path.insert(0, os.path.dirname(__file__))

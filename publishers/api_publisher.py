@@ -6,7 +6,7 @@ from config import ApiConfig
 
 
 class PublishError(Exception):
-    """API error. status = HTTP code, code = code from the body."""
+    """Ошибка API. status — HTTP-код, code — код из тела ответа."""
 
     def __init__(self, status, code="", message="", details=None):
         super().__init__(f"{status} {code} {message}".strip())
@@ -17,21 +17,21 @@ class PublishError(Exception):
 
 
 class DuplicateError(PublishError):
-    """409 - the item already exists on the server."""
+    """409 — запись уже есть на сервере."""
 
 
 class AuthError(PublishError):
-    """401/403 - key is wrong or revoked; retrying is pointless."""
+    """401/403 — ключ неверный или отозван; повторять бессмысленно."""
 
 
 class ApiPublisher:
     """
-    REST client for the destination API.
+    REST-клиент к целевому API.
 
-    Shows a few things worth having in any real API client: a key read
-    from config (never hard-coded), capped exponential-backoff retries on
-    network errors / 429 / 5xx, honouring Retry-After, and a typed error
-    hierarchy so callers can react to auth vs. duplicate vs. generic errors.
+    Показывает то, что полезно в любом реальном API-клиенте: ключ из конфига
+    (не хардкод), ретраи с ограниченным экспоненциальным backoff на сетевые
+    ошибки / 429 / 5xx, учёт Retry-After и типизированную иерархию ошибок —
+    чтобы вызывающий код различал auth / duplicate / общую ошибку.
     """
 
     def __init__(self, api_key=None, base_url=None, max_retries=3):
@@ -41,7 +41,7 @@ class ApiPublisher:
 
         if not self.api_key:
             raise RuntimeError(
-                "PUBLISH_API_KEY is not set (put it in the environment / .env)"
+                "PUBLISH_API_KEY не задан (положи его в окружение / .env)"
             )
 
         self.session = requests.Session()
@@ -70,20 +70,20 @@ class ApiPublisher:
             except (requests.ConnectionError, requests.Timeout) as e:
                 if attempt < self.max_retries:
                     wait = 2 ** (attempt + 1)
-                    print(f"  [API] network: {e!r}, retrying in {wait}s")
+                    print(f"  [API] сеть: {e!r}, повтор через {wait}s")
                     time.sleep(wait)
                     continue
                 raise
 
             if response.status_code == 429 and attempt < self.max_retries:
                 wait = self._retry_after(response)
-                print(f"  [API] 429, waiting {wait}s")
+                print(f"  [API] 429, жду {wait}s")
                 time.sleep(wait)
                 continue
 
             if response.status_code >= 500 and attempt < self.max_retries:
                 wait = 2 ** (attempt + 1)
-                print(f"  [API] {response.status_code}, retrying in {wait}s")
+                print(f"  [API] {response.status_code}, повтор через {wait}s")
                 time.sleep(wait)
                 continue
 
